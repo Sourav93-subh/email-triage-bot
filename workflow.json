@@ -1,0 +1,297 @@
+{
+  "name": "AI Email Triage Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "readStatus": "unread"
+        }
+      },
+      "id": "dee4d187-9bd4-4f97-a589-c5ec0bb976d6",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -160
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CjOen9SQAlTR1qiL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = $input.item.json;\nreturn {\n  from: email.from?.value?.[0]?.address || email.from || 'unknown',\n  from_name: email.from?.value?.[0]?.name || '',\n  subject: email.subject || '(no subject)',\n  body: (email.text || email.snippet || '').slice(0, 2000),\n  date: email.date || new Date().toISOString(),\n  message_id: email.id || ''\n};"
+      },
+      "id": "b29b1b9a-e8c7-4a8a-a7bd-9960691b8ae4",
+      "name": "Extract Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.choices?.[0]?.message?.content || '{}';\nlet cleaned = raw.trim();\nif (cleaned.startsWith('```')) {\n  cleaned = cleaned.split('```')[1];\n  if (cleaned.startsWith('json')) cleaned = cleaned.slice(4);\n  cleaned = cleaned.trim();\n}\ntry {\n  const parsed = JSON.parse(cleaned);\n  return {\n    ...parsed,\n    from: $('Extract Content').item.json.from,\n    from_name: $('Extract Content').item.json.from_name,\n    subject: $('Extract Content').item.json.subject,\n    body: $('Extract Content').item.json.body,\n    date: $('Extract Content').item.json.date,\n    message_id: $('Extract Content').item.json.message_id\n  };\n} catch(e) {\n  return {\n    urgency: 'low',\n    category: 'general',\n    sentiment: 'neutral',\n    summary: 'Could not parse email',\n    suggested_reply: 'Thank you for your email. We will get back to you shortly.',\n    action_required: false,\n    parse_error: e.message,\n    from: $('Extract Content').item.json.from,\n    from_name: $('Extract Content').item.json.from_name,\n    subject: $('Extract Content').item.json.subject,\n    body: $('Extract Content').item.json.body,\n    date: $('Extract Content').item.json.date\n  };\n}"
+      },
+      "id": "9a6a4dc2-02a1-43ea-baf5-835133688135",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.urgency }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "5b7e8e71-76b8-481d-b167-8f0627a6fa94"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d108af7f-c02d-4a59-9988-fabd7de7f52c",
+      "name": "Urgency Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        560,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BJXKULWTX",
+          "mode": "id"
+        },
+        "text": "=:rotating_light: *Urgent Email Alert*\n\n*From:* {{ $json.from_name }} <{{ $json.from }}>\n*Subject:* {{ $json.subject }}\n*Category:* {{ $json.category }} | *Sentiment:* {{ $json.sentiment }}\n\n*Summary:*\n{{ $json.summary }}\n\n*Suggested Reply:*\n{{ $json.suggested_reply }}\n\n_Received: {{ $json.date }}_",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "id": "247e1c6a-0e53-4d49-98e3-01b19ac83915",
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        368,
+        560
+      ],
+      "webhookId": "d48709c5-324c-45f9-85f8-fe424ceafb71",
+      "credentials": {
+        "slackApi": {
+          "id": "8fmm3JGew7UlObxo",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "=={{ $json.from }}",
+        "subject": "=Re: {{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.suggested_reply }}",
+        "options": {}
+      },
+      "id": "c4c635a0-d4f7-49bd-85fe-b6a5a1f2eff5",
+      "name": "Auto Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        768,
+        560
+      ],
+      "webhookId": "8b0540b9-928a-475e-b63f-efd1f8c30ca6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CjOen9SQAlTR1qiL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "3a531087a5fb805c9a9ccc7912ee5e2b",
+          "mode": "id"
+        },
+        "title": "=={{ $('Parse AI Response').item.json.subject }}",
+        "options": {}
+      },
+      "id": "cc7f31ca-f268-489f-82fb-87cde1ecfe6d",
+      "name": "Notion Log",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        560,
+        720
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "F1MKHrK4KrM6YsOB",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"temperature\": 0.2,\n  \"max_tokens\": 500,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an expert email triage assistant. Respond ONLY with valid JSON no markdown:\\n{\\\"urgency\\\": \\\"high or low\\\", \\\"category\\\": \\\"support or sales or billing or spam or general\\\", \\\"sentiment\\\": \\\"positive or neutral or negative or angry\\\", \\\"summary\\\": \\\"one sentence\\\", \\\"suggested_reply\\\": \\\"reply under 80 words\\\", \\\"action_required\\\": true or false}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"=Triage this email:\\nFrom: {{ $('Extract Content').item.json.from }}\\nSubject: {{ $('Extract Content').item.json.subject }}\\nBody: {{ $('Extract Content').item.json.body }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        560,
+        128
+      ],
+      "id": "5305a3f2-196b-4ce3-b264-a614da4ce28d",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2dGJ5xn7TrUYu5Gf",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Content": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Urgency Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgency Router": {
+      "main": [
+        [
+          {
+            "node": "Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auto Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Alert": {
+      "main": [
+        [
+          {
+            "node": "Notion Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto Reply": {
+      "main": [
+        [
+          {
+            "node": "Notion Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4645bc8a-b4e0-45e4-a749-9757ab28bbf5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "61dc11117785c3292d406857c471721993a5455467edc0f75433b20dd59c4872"
+  },
+  "nodeGroups": [],
+  "id": "FQkq69pdUOmexj0J",
+  "tags": []
+}
