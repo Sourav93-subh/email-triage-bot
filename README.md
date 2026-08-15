@@ -29,7 +29,7 @@
 <br/>
 
 [![n8n](https://img.shields.io/badge/Built%20with-n8n-FF6B35?style=for-the-badge&logo=n8n&logoColor=white)](https://n8n.io)
-[![Groq](https://img.shields.io/badge/AI-Groq%20%2B%20Llama%203.3-F54F29?style=for-the-badge)](https://groq.com)
+[![Groq](https://img.shields.io/badge/AI-Groq%20%2B%20Qwen%203.6-F54F29?style=for-the-badge)](https://groq.com)
 [![Gmail](https://img.shields.io/badge/Gmail-API-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](https://gmail.com)
 [![Slack](https://img.shields.io/badge/Slack-Alerts-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://slack.com)
 [![Notion](https://img.shields.io/badge/Notion-Log-000000?style=for-the-badge&logo=notion&logoColor=white)](https://notion.so)
