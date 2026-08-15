@@ -175,7 +175,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"temperature\": 0.2,\n  \"max_tokens\": 500,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an expert email triage assistant. Respond ONLY with valid JSON no markdown:\\n{\\\"urgency\\\": \\\"high or low\\\", \\\"category\\\": \\\"support or sales or billing or spam or general\\\", \\\"sentiment\\\": \\\"positive or neutral or negative or angry\\\", \\\"summary\\\": \\\"one sentence\\\", \\\"suggested_reply\\\": \\\"reply under 80 words\\\", \\\"action_required\\\": true or false}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"=Triage this email:\\nFrom: {{ $('Extract Content').item.json.from }}\\nSubject: {{ $('Extract Content').item.json.subject }}\\nBody: {{ $('Extract Content').item.json.body }}\"\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"model\": \"qwen/qwen3.6-27b\",\n  \"temperature\": 0.2,\n  \"max_tokens\": 500,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an expert email triage assistant. Respond ONLY with valid JSON no markdown:\\n{\\\"urgency\\\": \\\"high or low\\\", \\\"category\\\": \\\"support or sales or billing or spam or general\\\", \\\"sentiment\\\": \\\"positive or neutral or negative or angry\\\", \\\"summary\\\": \\\"one sentence\\\", \\\"suggested_reply\\\": \\\"reply under 80 words\\\", \\\"action_required\\\": true or false}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"=Triage this email:\\nFrom: {{ $('Extract Content').item.json.from }}\\nSubject: {{ $('Extract Content').item.json.subject }}\\nBody: {{ $('Extract Content').item.json.body }}\"\n    }\n  ]\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -284,9 +284,10 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "4645bc8a-b4e0-45e4-a749-9757ab28bbf5",
+  "versionId": "b9a9de6f-4b64-4ee3-ad77-6807c74fb630",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "61dc11117785c3292d406857c471721993a5455467edc0f75433b20dd59c4872"
