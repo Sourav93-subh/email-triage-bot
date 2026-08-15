@@ -211,7 +211,7 @@ email-triage-bot/
 
 ## ✦ Resume Bullet
 
-> Built autonomous AI email triage system using n8n + Groq (Llama 3.3 70B) — classifies urgency, category and sentiment of every incoming email; auto-replies to low-priority emails; alerts Slack for urgent ones; logs all to Notion — processing 100+ emails/day at $0 cost
+> Built autonomous AI email triage system using n8n + Groq (Qwen 3.6 27B) — classifies urgency, category and sentiment of every incoming email; auto-replies to low-priority emails; alerts Slack for urgent ones; logs all to Notion — processing 100+ emails/day at $0 cost
 
 ---
 
